@@ -1,0 +1,46 @@
+# ====================================================================
+# MemAI RL Cache Project - Gitignore Configuration
+# ====================================================================
+
+# 1. Python Environment & Dependency Packages
+.venv/
+venv/
+ENV/
+env/
+bin/
+lib/
+include/
+share/
+
+# 2. Automated Python Compiled Caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# 3. Deep Learning Models & Serialized Weights
+# (Forces downstream developers to run agent.train to generate assets)
+models/best_model.pth
+models/final_model.pth
+*.pth
+*.pt
+*.h5
+
+# 4. Local Execution Runtime Logs & Outputs
+logs/training_log.csv
+logs/benchmark_results.csv
+*.csv
+*.log
+
+# 5. Operating System Meta-Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# 6. IDE / Editor Workspace Configurations
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
