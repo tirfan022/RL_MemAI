@@ -60,7 +60,7 @@ it to actually work.
 
 ## 2. Architecture
 
-![System architecture](assets/architecture.png)
+![System architecture](assets/architecture_diagram.png)
 
 **Pipeline, left to right / top to bottom:** a `WorkloadGenerator` produces a
 page-access trace (Zipfian-distributed — a small number of "hot" pages get
