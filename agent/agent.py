@@ -7,29 +7,36 @@ from collections import deque
 from agent.network import CacheQNetwork
 
 class DQNAgent:
-    def __init__(self, state_dim, action_dim, lr=1e-4, gamma=0.99, 
-                 epsilon_start=1.0, epsilon_end=0.01, epsilon_decay=0.995):
+    def __init__(self, state_dim, action_dim, lr=1e-4, gamma=0.9,
+                 epsilon_start=1.0, epsilon_end=0.01, epsilon_decay=0.995,
+                 tau=0.01):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
         self.epsilon = epsilon_start
         self.epsilon_min = epsilon_end
         self.epsilon_decay = epsilon_decay
-        
+        self.tau = tau  # soft target-update rate
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
         self.model = CacheQNetwork(state_dim, action_dim).to(self.device)
         self.target_model = CacheQNetwork(state_dim, action_dim).to(self.device)
-        self.update_target_network()
+        self.update_target_network(hard=True)
         
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
-        self.criterion = nn.MSELoss()
+        self.criterion = nn.SmoothL1Loss()  # Huber loss: robust to reward outliers (-10..+10 oracle term)
         
         self.memory = deque(maxlen=20000)
         self.batch_size = 64
 
-    def update_target_network(self):
-        self.target_model.load_state_dict(self.model.state_dict())
+    def update_target_network(self, hard=False):
+        if hard:
+            self.target_model.load_state_dict(self.model.state_dict())
+            return
+        # Polyak/soft update: target = tau*online + (1-tau)*target
+        for target_param, param in zip(self.target_model.parameters(), self.model.parameters()):
+            target_param.data.copy_(self.tau * param.data + (1.0 - self.tau) * target_param.data)
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))

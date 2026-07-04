@@ -46,8 +46,8 @@ class CacheEnv(gym.Env):
         # +
         # current page
         self.observation_space = spaces.Box(
-            low=-1,
-            high=100000,
+            low=-1.0,
+            high=1.0,
             shape=(capacity*3 + 1,),
             dtype=np.float32
         )
@@ -81,8 +81,9 @@ class CacheEnv(gym.Env):
     
     def handle_hit(self):
 
-        # Reward for cache hit
-        reward = 10
+        # Reward for cache hit (scaled down from 10 -> keeps Q-value
+        # magnitudes small/stable for the network; see oracle_reward too)
+        reward = 1.0
 
         self.hits += 1
 
@@ -111,7 +112,7 @@ class CacheEnv(gym.Env):
 
             self.cache.append(self.current_page)
 
-            reward = 1
+            reward = 0.1
 
         # ----------------------------
         # Case 2 : Cache Full
@@ -220,26 +221,35 @@ class CacheEnv(gym.Env):
         distance = self.next_use_distance(evicted_page)
 
         if distance == float("inf"):
-            return 10
+            return 1.0
 
         reward = distance - 5
 
         reward = max(-10, min(10, reward))
 
-        return reward
+        # Scaled to roughly match the +1 hit reward's magnitude (was -10..+10)
+        return reward / 10.0
     
     def get_state(self):
 
         state = []
 
-        # Store Page ID, Frequency and Recency
+        # Normalization constants. page_id is a categorical index, not a
+        # meaningful ordinal quantity -- feeding it in raw (0..num_pages)
+        # alongside small frequency/recency values lets it dominate a
+        # randomly-initialized network's input norm and slows learning.
+        page_scale = float(max(self.workload)) + 1.0 if len(self.workload) > 0 else 1.0
+        recency_scale = 1000.0  # ~episode length; keeps recency in a small range
+        freq_scale = 50.0       # typical max access count for hot pages
+
+        # Store Page ID, Frequency and Recency (all normalized to ~[0,1]-ish ranges)
         for page in self.cache:
 
             # Page ID
-            state.append(page)
+            state.append(page / page_scale)
 
             # Frequency
-            state.append(self.frequency.get(page, 0))
+            state.append(self.frequency.get(page, 0) / freq_scale)
 
             # Recency
             if page in self.last_used:
@@ -247,14 +257,14 @@ class CacheEnv(gym.Env):
             else:
                 recency = 0
 
-            state.append(recency)
+            state.append(recency / recency_scale)
 
-        # Fill remaining cache slots
+        # Fill remaining cache slots (empty slot marker stays -1 for page id)
         while len(state) < self.capacity * 3:
-            state.extend([-1, 0, 0])
+            state.extend([-1.0 / page_scale, 0.0, 0.0])
 
         # Current requested page
-        state.append(self.current_page)
+        state.append(self.current_page / page_scale if self.current_page is not None and self.current_page >= 0 else -1.0 / page_scale)
 
         return np.array(state, dtype=np.float32)
 
