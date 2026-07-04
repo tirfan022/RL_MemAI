@@ -26,6 +26,7 @@ below, since there's no live dashboard to demo this with.**
 9. [Project structure](#9-project-structure)
 10. [Running it](#10-running-it)
 11. [Skills this project demonstrates](#11-skills-this-project-demonstrates)
+12. [References](#12-references)
 
 ---
 
@@ -334,3 +335,16 @@ python multi_trace_benchmark.py --traces 8
 - Hyperparameter optimization with Optuna (resumable studies, pruning, proxy objectives)
 - Statistical validation discipline: not trusting a single benchmark number, testing across independent traces, and reporting a result that's honest about its limits (6/8, not "always wins")
 - Technical writing: this document itself, as the primary artifact in place of a live demo
+
+---
+
+## 12. References
+
+- Song, Z., Berger, D. S., Li, K., & Lloyd, W. (2020). **Learning Relaxed Belady for Content Distribution Network Caching.** *17th USENIX Symposium on Networked Systems Design and Implementation (NSDI 20)*, pp. 529–544. [usenix.org/conference/nsdi20/presentation/song](https://www.usenix.org/conference/nsdi20/presentation/song) — the production-scale precedent for the Belady-distance reward shaping used in §1/§3.
+- Belady, L. A. (1966). **A Study of Replacement Algorithms for a Virtual-Storage Computer.** *IBM Systems Journal*, 5(2), 78–101. — the offline-optimal algorithm this project's reward function is shaped against.
+- Mnih, V., et al. (2015). **Human-level control through deep reinforcement learning.** *Nature*, 518, 529–533. — the original DQN architecture (online network, target network, experience replay).
+- van Hasselt, H., Guez, A., & Silver, D. (2016). **Deep Reinforcement Learning with Double Q-learning.** *AAAI 2016*. [arXiv:1509.06461](https://arxiv.org/abs/1509.06461) — Double DQN, used here to reduce Q-value overestimation.
+- Breslau, L., Cao, P., Fan, L., Phillips, G., & Shenker, S. (1999). **Web Caching and Zipf-like Distributions: Evidence and Implications.** *IEEE INFOCOM 1999*. — justification for using Zipfian-distributed synthetic workloads to approximate real cache/web access skew.
+- Akiba, T., Sano, S., Yanase, T., Ohta, T., & Koyama, M. (2019). **Optuna: A Next-generation Hyperparameter Optimization Framework.** *KDD 2019*. [optuna.org](https://optuna.org) — used in `tune.py` (§5).
+- **Gymnasium** (Farama Foundation), the maintained successor to OpenAI Gym — [gymnasium.farama.org](https://gymnasium.farama.org) — RL environment API used by `cache/cache_env.py`.
+- Paszke, A., et al. (2019). **PyTorch: An Imperative Style, High-Performance Deep Learning Library.** *NeurIPS 2019*. [pytorch.org](https://pytorch.org)
